@@ -5,6 +5,7 @@ import {
   type ElementNode,
   type SimpleExpressionNode,
   type TemplateChildNode,
+  ElementTypes,
 } from '@vue/compiler-dom';
 
 import {
@@ -26,6 +27,9 @@ import { readForwardableSetup, type ForwardableSetup } from './forward-setup.ts'
 import {
   attributeHole,
   createRenderContext,
+  shadowedDeclarations,
+  reserveBindings,
+  shadowConstants,
   hoistArgValue,
   hoistModelRef,
   importStatementForBinding,
@@ -257,6 +261,11 @@ export function transformTemplate(
     return undefined;
   }
 
+  // The render uses a constant's name; the caller prints again without that constant.
+  if (shadowedDeclarations(state.ctx).length > 0) {
+    return undefined;
+  }
+
   return {
     snippet: renderPreparedSfcSnippet({
       templateCode: applyEdits(template, state.edits),
@@ -267,8 +276,14 @@ export function transformTemplate(
 
 /** Reserve setup names and route forwarded imports before any hoist can collide with them. */
 function seedForwardedSetup(setup: ForwardableSetup, state: TransformState): boolean {
-  for (const name of setup.bindings) {
-    state.ctx.bindings.add(name);
+  reserveBindings(setup.bindings, state.ctx);
+  // Nested scopes in forwarded statements could capture a printed constant.
+  for (const statement of setup.statements) {
+    try {
+      shadowConstants(declaredNamesIn(parseModule(statement.source).program), state.ctx);
+    } catch {
+      return false;
+    }
   }
   for (const { localName, binding } of setup.imports) {
     if (binding.importName === localName) {
@@ -848,6 +863,12 @@ function substituteArgsExpression(
 
 function collectTemplateScopeBindings(nodes: TemplateChildNode[], ctx: RenderContext): boolean {
   for (const node of nodes) {
+    if (
+      node.type === NodeTypes.INTERPOLATION &&
+      node.content.type === NodeTypes.SIMPLE_EXPRESSION
+    ) {
+      shadowExpressionNames(node.content.content, ctx);
+    }
     if (node.type !== NodeTypes.ELEMENT) {
       continue;
     }
@@ -860,6 +881,9 @@ function collectTemplateScopeBindings(nodes: TemplateChildNode[], ctx: RenderCon
       const pattern = bindingPatternForDirective(prop);
       if (pattern && !addBindingPattern(pattern, ctx)) {
         return false;
+      }
+      if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+        shadowExpressionNames(prop.exp.content, ctx);
       }
     }
 
@@ -886,15 +910,49 @@ function bindingPatternForDirective(directive: DirectiveNode): string | undefine
   return directive.name === 'slot' ? expression : undefined;
 }
 
+function shadowExpressionNames(code: string, ctx: RenderContext): void {
+  const expression = parseTemplateExpression(code);
+  if (expression) {
+    shadowConstants(declaredNamesIn(expression), ctx);
+  }
+}
+
+function declaredNamesIn(code: Node): Set<string> {
+  const names = new Set<string>();
+  walk(code, (node) => {
+    if (
+      node.type === 'ArrowFunctionExpression' ||
+      node.type === 'FunctionExpression' ||
+      node.type === 'FunctionDeclaration'
+    ) {
+      node.params.forEach((param) => addBindingNames(param, names));
+      if (node.id) {
+        names.add(node.id.name);
+      }
+    } else if (node.type === 'VariableDeclarator') {
+      addBindingNames(node.id, names);
+    } else if (node.type === 'CatchClause' && node.param) {
+      addBindingNames(node.param, names);
+    } else if (node.type === 'ClassExpression' || node.type === 'ClassDeclaration') {
+      if (node.id) {
+        names.add(node.id.name);
+      }
+    }
+  });
+  return names;
+}
+
 function addBindingPattern(pattern: string, ctx: RenderContext): boolean {
   const ast = parseTemplateExpression(`${arrowParamsForPattern(pattern)} => 0`);
   if (ast?.type !== 'ArrowFunctionExpression') {
     return false;
   }
 
+  const names = new Set<string>();
   for (const param of ast.params) {
-    addBindingNames(param, ctx.bindings);
+    addBindingNames(param, names);
   }
+  reserveBindings(names, ctx);
 
   return true;
 }
@@ -1305,4 +1363,88 @@ function setupProperty(renderObject: E.ObjectExpression): E.ObjectProperty | und
     (property): property is E.ObjectProperty =>
       property.type === 'Property' && staticKey(property) === SETUP_PROPERTY
   );
+}
+
+const BUILT_IN_DIRECTIVES = new Set(
+  'bind cloak else else-if for html if is memo model on once pre show slot text'.split(' ')
+);
+
+const camelize = (name: string) =>
+  name.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase());
+
+// Tags are read as written and camelized, custom directives as `vFoo`.
+export function templateNames(template: string): string[] {
+  const names = new Set<string>();
+  const readExpression = (code: string) => {
+    let expression: Node | undefined = parseTemplateExpression(code);
+    if (!expression) {
+      // A handler can be statements: `@click="a++; b = 1"`.
+      try {
+        expression = parseModule(code).program;
+      } catch {
+        return;
+      }
+    }
+    walk(expression, (node, parent) => {
+      if (
+        node.type === 'Identifier' &&
+        !(parent?.type === 'MemberExpression' && parent.property === node && !parent.computed) &&
+        !(
+          parent?.type === 'Property' &&
+          parent.key === node &&
+          !parent.computed &&
+          !parent.shorthand
+        )
+      ) {
+        names.add(node.name);
+      }
+    });
+  };
+  const visit = (nodes: TemplateChildNode[]) => {
+    for (const node of nodes) {
+      if (
+        node.type === NodeTypes.INTERPOLATION &&
+        node.content.type === NodeTypes.SIMPLE_EXPRESSION
+      ) {
+        readExpression(node.content.content);
+      }
+      if (node.type !== NodeTypes.ELEMENT) {
+        continue;
+      }
+      // Native tags read nothing from `<script setup>`.
+      if (node.tagType !== ElementTypes.ELEMENT) {
+        names.add(node.tag);
+        names.add(camelize(node.tag));
+      }
+      for (const prop of node.props) {
+        if (prop.type !== NodeTypes.DIRECTIVE) {
+          continue;
+        }
+        if (!BUILT_IN_DIRECTIVES.has(prop.name)) {
+          const pascal = camelize(prop.name);
+          names.add(`v${pascal.charAt(0).toUpperCase()}${pascal.slice(1)}`);
+        }
+        // `:count` is `:count="count"`.
+        if (
+          prop.name === 'bind' &&
+          !prop.exp &&
+          prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION &&
+          prop.arg.isStatic
+        ) {
+          names.add(camelize(prop.arg.content));
+        }
+        if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+          const code = prop.exp.content;
+          // A `v-for` source reads names; its alias declares them.
+          const source = prop.name === 'for' ? /\s(?:in|of)\s+([\s\S]*)$/.exec(code)?.[1] : code;
+          if (source !== undefined && prop.name !== 'slot') {
+            readExpression(source);
+          }
+        }
+      }
+      visit(node.children);
+    }
+  };
+  visit(parse(normalizeLineEndings(template), { onError: () => {} }).children);
+  return [...names];
 }
