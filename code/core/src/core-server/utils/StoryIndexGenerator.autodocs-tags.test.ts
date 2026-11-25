@@ -54,8 +54,8 @@ function sidebarOf(index: StoryIndex) {
   };
 }
 
-async function recordAutodocs(project: Project, storiesFile: string) {
-  const index = await indexFiles(project, [`${storiesFile}.stories.ts`]);
+async function recordAutodocs(project: Project, storiesFile: string, extension = 'ts') {
+  const index = await indexFiles(project, [`${storiesFile}.stories.${extension}`]);
   const entries = Object.values(index.entries);
   const stories = entries.filter((entry) => entry.type === 'story');
   const autodocs = entries.find((entry) => entry.type === 'docs');
@@ -118,8 +118,8 @@ describe('autodocs entry of a CSF file', () => {
       {
         "autodocsCreated": true,
         "autodocsInSidebar": true,
-        "autodocsTags": "dev, test, manifest",
-        "sidebarComponentTags": "dev, test, manifest",
+        "autodocsTags": "dev, test, manifest, autodocs",
+        "sidebarComponentTags": "dev, test, manifest, autodocs",
         "sidebarEntries": "Docs, Story 1, Story 2",
         "storiesOnDocsPage": "Story 1, Story 2",
         "storyTags": {
@@ -171,7 +171,7 @@ describe('autodocs entry of a CSF file', () => {
         {
           "autodocsCreated": true,
           "autodocsInSidebar": true,
-          "autodocsTags": "dev, test, manifest, autodocs",
+          "autodocsTags": "dev, test, manifest",
           "sidebarComponentTags": "dev, test, manifest",
           "sidebarEntries": "Docs, Story 1, Story 2",
           "storiesOnDocsPage": "Story 2",
@@ -288,6 +288,24 @@ describe('autodocs entry of a CSF file', () => {
     `);
   });
 
+  it('M: story with a test', async () => {
+    expect(await recordAutodocs('default-project', 'M-story-with-test', 'js'))
+      .toMatchInlineSnapshot(`
+      {
+        "autodocsCreated": true,
+        "autodocsInSidebar": true,
+        "autodocsTags": "dev, test, manifest, autodocs",
+        "sidebarComponentTags": "dev, test, manifest",
+        "sidebarEntries": "Docs, Story 1, renders",
+        "storiesOnDocsPage": "Story 1",
+        "storyTags": {
+          "Story 1": "dev, test, manifest, autodocs",
+          "renders": "dev, test, manifest, test-fn",
+        },
+      }
+    `);
+  });
+
   it('K: ignores the stories of a subcomponent', async () => {
     const index = await indexFiles('default-project', [
       'K-parent.stories.ts',
@@ -316,13 +334,7 @@ describe('MDX docs page that takes the name of the autodocs entry', () => {
       await recordAttachedMdx('default-project', 'B-tag-in-all-stories', 'B-tag-in-all-stories')
     ).toMatchInlineSnapshot(`
       {
-        "autodocsTags": null,
-        "mdxInManifest": true,
-        "mdxInSidebar": true,
-        "mdxName": "Docs",
-        "mdxTags": "dev, test, manifest, attached-mdx",
-        "sidebarComponentTags": "dev, test, manifest",
-        "sidebarEntries": "Docs, Story 1, Story 2",
+        "indexingError": "You created a component docs page for 'B-tag-in-all-stories', but also tagged the CSF file with 'autodocs'",
       }
     `);
   });
@@ -368,7 +380,13 @@ describe('MDX docs page that takes the name of the autodocs entry', () => {
       await recordAttachedMdx('default-project', 'E-first-story-excluded', 'E-first-story-excluded')
     ).toMatchInlineSnapshot(`
       {
-        "indexingError": "You created a component docs page for 'E-first-story-excluded', but also tagged the CSF file with 'autodocs'",
+        "autodocsTags": null,
+        "mdxInManifest": true,
+        "mdxInSidebar": true,
+        "mdxName": "Docs",
+        "mdxTags": "dev, test, manifest, autodocs, attached-mdx",
+        "sidebarComponentTags": "dev, test, manifest",
+        "sidebarEntries": "Docs, Story 1, Story 2",
       }
     `);
   });

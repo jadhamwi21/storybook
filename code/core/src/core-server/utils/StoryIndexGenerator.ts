@@ -436,7 +436,17 @@ export class StoryIndexGenerator {
       const { metaId, metaTags } = indexInputs[0];
       const entry = storyEntries[0];
       const id = toId(metaId ?? entry.title, name);
-      const tags = combineTags(...projectTags, ...(metaTags ?? indexInputs[0].tags ?? []));
+      // An MDX page may not replace the entry when it has `autodocs`, so it says all stories ask for it
+      const everyStoryIsOnThePage = storyEntries
+        .filter((storyEntry) => storyEntry.subtype === 'story')
+        .every((storyEntry) => storyEntry.tags.includes(Tag.AUTODOCS));
+      const tags = metaTags
+        ? combineTags(
+            ...projectTags,
+            ...metaTags,
+            everyStoryIsOnThePage ? Tag.AUTODOCS : `!${Tag.AUTODOCS}`
+          )
+        : combineTags(...projectTags, ...(indexInputs[0].tags ?? []));
 
       const docsEntry: DocsIndexEntry & { tags: Tag[] } = {
         id,
