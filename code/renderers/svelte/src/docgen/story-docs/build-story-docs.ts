@@ -189,7 +189,10 @@ function storySnippet(
       .join(' '),
     unresolvedWarning([
       ...resolved.unresolved,
-      ...resolved.locals.filter((name) => !imported.declared.includes(name)),
+      ...resolved.locals.filter(
+        (name) =>
+          !imported.declared.includes(name) && !imported.unresolvedIdentifiers?.includes(name)
+      ),
     ]),
     renders ? RENDER_WARNING : undefined,
   ].filter(Boolean);
