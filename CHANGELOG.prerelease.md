@@ -1,3 +1,18 @@
+## 11.0.0-rc.1
+
+- Angular: Document inputs and outputs exposed through hostDirectives - [#36655](https://github.com/storybookjs/storybook/pull/36655), thanks @pennydesigns!
+- Builder-Vite: Explain story files that fail to parse - [#37515](https://github.com/storybookjs/storybook/pull/37515), thanks @shubham-cpp!
+- CLI: Handle a sandbox that blocks ports or localhost - [#37433](https://github.com/storybookjs/storybook/pull/37433), thanks @kasperpeulen!
+- CLI: Name the Storybooks an upgrade skips, and why - [#37440](https://github.com/storybookjs/storybook/pull/37440), thanks @kasperpeulen!
+- CLI: Read process ancestry from one snapshot, fixing version detection on Windows 11 25H2 and test timeouts - [#37420](https://github.com/storybookjs/storybook/pull/37420), thanks @ndelangen!
+- CLI: Stop argtypes-default-value from skipping a preview with mixed exports - [#37713](https://github.com/storybookjs/storybook/pull/37713), thanks @valentinpalkovic!
+- CLI: Stop upgrades that skip a major when package.json declares a range - [#37439](https://github.com/storybookjs/storybook/pull/37439), thanks @kasperpeulen!
+- Core: Deprecate @storybook/global and stop using it internally - [#37729](https://github.com/storybookjs/storybook/pull/37729), thanks @kasperpeulen!
+- Docs: Fallback to the original source when a source transform throws - [#37748](https://github.com/storybookjs/storybook/pull/37748), thanks @huang-julien!
+- Manager: Keep a component titled Constructor from crashing the sidebar - [#37739](https://github.com/storybookjs/storybook/pull/37739), thanks @Sidnioulz!
+- React: Import a component once when a story arg also renders it - [#37674](https://github.com/storybookjs/storybook/pull/37674), thanks @valentinpalkovic!
+- Svelte: Use the component's @import tag in story snippets - [#37539](https://github.com/storybookjs/storybook/pull/37539), thanks @jackeddisciple!
+
 ## 11.0.0-rc.0
 
 - Addon-MCP: Remove toolsets option and X-MCP-Toolsets header - [#37676](https://github.com/storybookjs/storybook/pull/37676), thanks @kasperpeulen!
