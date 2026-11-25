@@ -21,6 +21,7 @@ import {
   resolveArgsRecord,
   resolveDestructuredValue,
 } from './resolve-members.ts';
+import { isVisiblyChanged } from './unchanging-binding.ts';
 
 /** An arg value read through to the definition it names, and what printing it still depends on. */
 export interface ResolvedArgValue {
@@ -28,8 +29,10 @@ export interface ResolvedArgValue {
   node: Node;
   /** Imports the printed node needs to resolve where the snippet lands. */
   imports: ImportRef[];
-  /** Source text of every name the printed node depends on that no import can supply. */
+  /** Source text of everything the printed node depends on that this pass could not read. */
   unresolved: string[];
+  /** Module-level names of the story file the printed node reads; see `collectStoryConstants`. */
+  locals: string[];
 }
 
 /**
@@ -42,6 +45,7 @@ export interface ResolvedArgValue {
  */
 export const resolveArgValue = (node: Node, ctx: ReferenceContext): ResolvedArgValue => {
   const unresolved: string[] = [];
+  const locals: string[] = [];
   const followed = followValue(unwrapExpression(node), ctx, new Set());
   const inlining = new Set<Node>();
   // A rest element reached through an alias is still read where the arg is, not where the alias is.
@@ -67,11 +71,11 @@ export const resolveArgValue = (node: Node, ctx: ReferenceContext): ResolvedArgV
       continue;
     }
     if (ctx.editor.scopes.program.bindings.has(name)) {
-      unresolved.push(name);
+      locals.push(name);
     }
   }
 
-  return { node: resolved, imports, unresolved };
+  return { node: resolved, imports, unresolved, locals };
 };
 
 /**
@@ -250,14 +254,16 @@ const objectFrom = (
   );
 };
 
-/** Reads a bare name through to the value it was declared with, as far as the chain goes. */
+// A name the file visibly changes later, as `lines.push('b')` does, stays a name.
 const followValue = (node: Node, ctx: ReferenceContext, seen: Set<string>): Node => {
   if (node.type !== 'Identifier' || seen.has(node.name)) {
     return node;
   }
-  const init =
-    constantInit(ctx.editor.scopes.program.bindings.get(node.name)) ??
-    resolveDestructuredValue(ctx, node.name);
+  const binding = ctx.editor.scopes.program.bindings.get(node.name);
+  if (binding && isVisiblyChanged(binding, ctx)) {
+    return node;
+  }
+  const init = constantInit(binding) ?? resolveDestructuredValue(ctx, node.name);
   if (!init) {
     return node;
   }

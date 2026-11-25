@@ -23,6 +23,8 @@ export interface ResolvedStoryArgs {
   imports: ImportRef[];
   /** Source text of everything hiding args from this pass; empty when the merged args are known. */
   unresolved: string[];
+  /** Module-level names of the story file the merged args read; see `collectStoryConstants`. */
+  locals: string[];
   /** The story's own config members, spreads and names followed. */
   storyMembers: ResolvedMembers;
   /** The meta's config members, spreads and names followed. */
@@ -75,6 +77,7 @@ export function createStoryArgsResolver(
 
       const args: Record<string, Node> = {};
       const imports: ImportRef[] = [];
+      const locals = new Set<string>();
       const unresolved = [
         ...metaMembers.unresolved,
         ...metaArgs.unresolved,
@@ -90,9 +93,10 @@ export function createStoryArgsResolver(
         args[key] = value.node;
         imports.push(...value.imports);
         unresolved.push(...value.unresolved);
+        value.locals.forEach((name) => locals.add(name));
       }
 
-      return { args, imports, unresolved, storyMembers, metaMembers };
+      return { args, imports, unresolved, locals: [...locals], storyMembers, metaMembers };
     },
   };
 }

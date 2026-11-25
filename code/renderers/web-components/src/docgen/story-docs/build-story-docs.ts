@@ -253,7 +253,7 @@ const renderedArgsSnippet = (
     deps.declaration,
     deps.docgenPayload.argTypes ?? {},
     deps.tag,
-    resolved.unresolved,
+    [...resolved.unresolved, ...resolved.locals],
     render.kind !== 'missing'
   );
   warnings.push(args.warning);

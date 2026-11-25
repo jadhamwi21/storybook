@@ -66,7 +66,7 @@ export function getCodeSnippet(
   componentName?: string,
   resolver: StoryArgsResolver = createStoryArgsResolver(csf)
 ): CodeSnippet {
-  const { args, imports, unresolved } = resolver.resolve(storyName);
+  const { args, imports, unresolved, locals } = resolver.resolve(storyName);
   const importedBind = importedBoundStory(csf, storyName, args);
   // All code the snippet prints, so none of it is read as a mark.
   const sources = [csf.editor.code, ...Object.values(args).map(detachedTextOf)];
@@ -85,7 +85,7 @@ export function getCodeSnippet(
     snippet: stripHoles(template),
     template,
     imports: importedBind ? [...imports, importedBind.importRef] : imports,
-    unresolved,
+    unresolved: [...unresolved, ...locals],
   };
 }
 

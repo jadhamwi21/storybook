@@ -464,7 +464,7 @@ function resolveStaticStoryArgs(
   const resolved = options.resolver.resolve(storyExport);
   return {
     classified: classifyArgs(resolved.args, docgenArgInfo),
-    unresolved: resolved.unresolved,
+    unresolved: [...resolved.unresolved, ...resolved.locals],
   };
 }
 

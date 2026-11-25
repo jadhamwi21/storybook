@@ -24,6 +24,13 @@ export {
 } from './reference-context.ts';
 export { isSelfContained, resolveArgValue, type ResolvedArgValue } from './resolve-arg-value.ts';
 export {
+  NO_STORY_CONSTANTS,
+  collectStoryConstants,
+  type StoryConstant,
+  type StoryConstants,
+} from './story-constants.ts';
+export { isChangingMethod, isVisiblyChanged } from './unchanging-binding.ts';
+export {
   resolveArgsRecord,
   resolveBindingMembers,
   resolveObjectMembers,

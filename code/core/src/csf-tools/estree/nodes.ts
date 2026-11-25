@@ -65,6 +65,24 @@ export const unwrapExpression = <T extends { type: string } | null | undefined>(
 // Object literal properties written as `key: value`, methods or accessors (not spreads).
 export type Property = E.ObjectProperty;
 
+/** The name of the method a callee calls, as `push` in `lines.push` or `lines['push']`. */
+export const calledMethodName = (callee: Node): string | undefined => {
+  const member = unwrapExpression(callee);
+  if (member.type !== 'MemberExpression') {
+    return undefined;
+  }
+  if (member.computed) {
+    const key = member.property;
+    if (isStringLiteral(key)) {
+      return key.value;
+    }
+    return key.type === 'TemplateLiteral' && key.expressions.length === 0
+      ? (key.quasis[0]?.value.cooked ?? undefined)
+      : undefined;
+  }
+  return member.property.type === 'Identifier' ? member.property.name : undefined;
+};
+
 /**
  * Static key of an object member, or `undefined` for a spread or a key only running the code would
  * produce. A computed key written as a literal is static: `{ ['a']: 1 }` names `a`, `{ [a]: 1 }`

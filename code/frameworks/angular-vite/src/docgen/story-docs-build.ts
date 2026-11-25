@@ -266,7 +266,7 @@ type RenderedSnippet = HostComponentSnippet & {
 const storyShape = (exportName: string, deps: StoryDocDeps): StoryShape => {
   const resolved = deps.resolveStoryArgs.resolve(exportName);
   const enums = deps.snippetMeta?.enums ?? [];
-  const unresolved = [...resolved.unresolved];
+  const unresolved = [...resolved.unresolved, ...resolved.locals];
   for (const value of Object.values(resolved.args)) {
     // An arg that still carries a name has to be reported: an Angular binding is evaluated against
     // the host component the snippet ships, so a name that component does not have reads as

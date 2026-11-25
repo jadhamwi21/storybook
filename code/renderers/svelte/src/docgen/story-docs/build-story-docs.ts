@@ -150,7 +150,7 @@ function storySnippet(
     typescript: file.typescript,
     parameter: story?.parameter,
     snippets,
-    argsComplete: resolved.unresolved.length === 0,
+    argsComplete: resolved.unresolved.length === 0 && resolved.locals.length === 0,
   });
   let markup = printed.snippet;
   let holes = printed.template;
@@ -187,7 +187,10 @@ function storySnippet(
     imported.unresolvedIdentifiers
       ?.map((name) => `Identifier not resolved: \`${name}\`.`)
       .join(' '),
-    unresolvedWarning(resolved.unresolved.filter((name) => !imported.declared.includes(name))),
+    unresolvedWarning([
+      ...resolved.unresolved,
+      ...resolved.locals.filter((name) => !imported.declared.includes(name)),
+    ]),
     renders ? RENDER_WARNING : undefined,
   ].filter(Boolean);
   const importCode = imported.block ? `${imported.block}\n\n` : '';
