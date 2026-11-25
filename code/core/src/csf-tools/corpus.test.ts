@@ -32,7 +32,8 @@ const summarize = (file: string, code: string) => {
     bindings[name] = { constant: binding.constant, uses: binding.references.length };
   }
   return {
-    indexInputs: csf.indexInputs,
+    // `golden.json` predates `metaTags`, which repeats `meta.tags` below on every input
+    indexInputs: csf.indexInputs.map(({ metaTags: _metaTags, ...input }) => input),
     meta: {
       title: csf._meta?.title ?? null,
       id: csf._meta?.id ?? null,

@@ -49,7 +49,7 @@ import { type IndexStatsSummary, addStats } from './summarizeStats.ts';
 
 // Extended type to keep track of the csf meta id so we know the component id when resolving docs
 type StoryIndexEntryWithExtra = StoryIndexEntry & {
-  extra: { metaId?: string; stats: IndexInputStats };
+  extra: { metaId?: string; metaTags?: Tag[]; stats: IndexInputStats };
 };
 type StoriesFile = {
   type: 'stories';
@@ -403,6 +403,7 @@ export class StoryIndexGenerator {
           id,
           extra: {
             metaId: input.metaId,
+            ...(input.metaTags && { metaTags: input.metaTags }),
             stats: input.__stats ?? {},
           },
           name,
@@ -432,10 +433,10 @@ export class StoryIndexGenerator {
     if (createDocEntry && this.options.build?.test?.disableAutoDocs !== true) {
       const docsName = this.options.docs?.defaultName ?? 'Docs';
       const name = docsName;
-      const { metaId } = indexInputs[0];
+      const { metaId, metaTags } = indexInputs[0];
       const entry = storyEntries[0];
       const id = toId(metaId ?? entry.title, name);
-      const tags = combineTags(...projectTags, ...(indexInputs[0].tags ?? []));
+      const tags = combineTags(...projectTags, ...(metaTags ?? indexInputs[0].tags ?? []));
 
       const docsEntry: DocsIndexEntry & { tags: Tag[] } = {
         id,
@@ -568,7 +569,7 @@ export class StoryIndexGenerator {
 
     const tags = combineTags(
       ...projectTags,
-      ...(csfEntry?.tags ?? []),
+      ...(csfEntry?.extra.metaTags ?? csfEntry?.tags ?? []),
       ...(analysis.metaTags ?? []),
       csfEntry ? Tag.ATTACHED_MDX : Tag.UNATTACHED_MDX
     );

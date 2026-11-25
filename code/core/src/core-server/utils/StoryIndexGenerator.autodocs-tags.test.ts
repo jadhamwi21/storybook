@@ -118,8 +118,8 @@ describe('autodocs entry of a CSF file', () => {
       {
         "autodocsCreated": true,
         "autodocsInSidebar": true,
-        "autodocsTags": "dev, test, manifest, autodocs",
-        "sidebarComponentTags": "dev, test, manifest, autodocs",
+        "autodocsTags": "dev, test, manifest",
+        "sidebarComponentTags": "dev, test, manifest",
         "sidebarEntries": "Docs, Story 1, Story 2",
         "storiesOnDocsPage": "Story 1, Story 2",
         "storyTags": {
@@ -168,19 +168,19 @@ describe('autodocs entry of a CSF file', () => {
   it('E: first story excluded from autodocs', async () => {
     expect(await recordAutodocs('default-project', 'E-first-story-excluded'))
       .toMatchInlineSnapshot(`
-      {
-        "autodocsCreated": true,
-        "autodocsInSidebar": true,
-        "autodocsTags": "dev, test, manifest",
-        "sidebarComponentTags": "dev, test, manifest",
-        "sidebarEntries": "Docs, Story 1, Story 2",
-        "storiesOnDocsPage": "Story 2",
-        "storyTags": {
-          "Story 1": "dev, test, manifest",
-          "Story 2": "dev, test, manifest, autodocs",
-        },
-      }
-    `);
+        {
+          "autodocsCreated": true,
+          "autodocsInSidebar": true,
+          "autodocsTags": "dev, test, manifest, autodocs",
+          "sidebarComponentTags": "dev, test, manifest",
+          "sidebarEntries": "Docs, Story 1, Story 2",
+          "storiesOnDocsPage": "Story 2",
+          "storyTags": {
+            "Story 1": "dev, test, manifest",
+            "Story 2": "dev, test, manifest, autodocs",
+          },
+        }
+      `);
   });
 
   it('F: autodocs inherited from project but all stories excluded', async () => {
@@ -204,19 +204,19 @@ describe('autodocs entry of a CSF file', () => {
   it('G: stories remove dev and manifest under project autodocs', async () => {
     expect(await recordAutodocs('autodocs-project', 'G-story-tag-inheritance'))
       .toMatchInlineSnapshot(`
-      {
-        "autodocsCreated": true,
-        "autodocsInSidebar": true,
-        "autodocsTags": "test, autodocs",
-        "sidebarComponentTags": "test, autodocs",
-        "sidebarEntries": "Docs, Story 2",
-        "storiesOnDocsPage": "Story 1, Story 2",
-        "storyTags": {
-          "Story 1": "test, autodocs",
-          "Story 2": "dev, test, autodocs",
-        },
-      }
-    `);
+        {
+          "autodocsCreated": true,
+          "autodocsInSidebar": true,
+          "autodocsTags": "dev, test, manifest, autodocs",
+          "sidebarComponentTags": "dev, test, autodocs",
+          "sidebarEntries": "Docs, Story 2",
+          "storiesOnDocsPage": "Story 1, Story 2",
+          "storyTags": {
+            "Story 1": "test, autodocs",
+            "Story 2": "dev, test, autodocs",
+          },
+        }
+      `);
   });
 
   it('H: first story removes dev and manifest', async () => {
@@ -224,8 +224,8 @@ describe('autodocs entry of a CSF file', () => {
       {
         "autodocsCreated": true,
         "autodocsInSidebar": true,
-        "autodocsTags": "test, autodocs",
-        "sidebarComponentTags": "test, autodocs",
+        "autodocsTags": "dev, test, manifest, autodocs",
+        "sidebarComponentTags": "dev, test, manifest, autodocs",
         "sidebarEntries": "Docs, Story 2",
         "storiesOnDocsPage": "Story 1, Story 2",
         "storyTags": {
@@ -316,7 +316,13 @@ describe('MDX docs page that takes the name of the autodocs entry', () => {
       await recordAttachedMdx('default-project', 'B-tag-in-all-stories', 'B-tag-in-all-stories')
     ).toMatchInlineSnapshot(`
       {
-        "indexingError": "You created a component docs page for 'B-tag-in-all-stories', but also tagged the CSF file with 'autodocs'",
+        "autodocsTags": null,
+        "mdxInManifest": true,
+        "mdxInSidebar": true,
+        "mdxName": "Docs",
+        "mdxTags": "dev, test, manifest, attached-mdx",
+        "sidebarComponentTags": "dev, test, manifest",
+        "sidebarEntries": "Docs, Story 1, Story 2",
       }
     `);
   });
@@ -362,13 +368,7 @@ describe('MDX docs page that takes the name of the autodocs entry', () => {
       await recordAttachedMdx('default-project', 'E-first-story-excluded', 'E-first-story-excluded')
     ).toMatchInlineSnapshot(`
       {
-        "autodocsTags": null,
-        "mdxInManifest": true,
-        "mdxInSidebar": true,
-        "mdxName": "Docs",
-        "mdxTags": "dev, test, manifest, attached-mdx",
-        "sidebarComponentTags": "dev, test, manifest",
-        "sidebarEntries": "Docs, Story 1, Story 2",
+        "indexingError": "You created a component docs page for 'E-first-story-excluded', but also tagged the CSF file with 'autodocs'",
       }
     `);
   });
@@ -378,16 +378,16 @@ describe('MDX docs page attached next to the autodocs entry', () => {
   it('H: first story removes dev and manifest', async () => {
     expect(await recordAttachedMdx('default-project', 'H-first-story-hidden', 'H-guide'))
       .toMatchInlineSnapshot(`
-      {
-        "autodocsTags": "test, autodocs",
-        "mdxInManifest": true,
-        "mdxInSidebar": true,
-        "mdxName": "Guide",
-        "mdxTags": "dev, test, manifest, autodocs, attached-mdx",
-        "sidebarComponentTags": "test, autodocs",
-        "sidebarEntries": "Docs, Story 2, Guide",
-      }
-    `);
+        {
+          "autodocsTags": "dev, test, manifest, autodocs",
+          "mdxInManifest": true,
+          "mdxInSidebar": true,
+          "mdxName": "Guide",
+          "mdxTags": "dev, test, manifest, autodocs, attached-mdx",
+          "sidebarComponentTags": "dev, test, manifest, autodocs",
+          "sidebarEntries": "Docs, Story 2, Guide",
+        }
+      `);
   });
 
   it('I: last story removes dev and manifest', async () => {
@@ -408,30 +408,30 @@ describe('MDX docs page attached next to the autodocs entry', () => {
   it('J: meta removes dev to make a docs-only component', async () => {
     expect(await recordAttachedMdx('default-project', 'J-docs-only-component', 'J-guide'))
       .toMatchInlineSnapshot(`
-      {
-        "autodocsTags": "test, manifest, autodocs",
-        "mdxInManifest": true,
-        "mdxInSidebar": true,
-        "mdxName": "Guide",
-        "mdxTags": "dev, test, manifest, autodocs, attached-mdx",
-        "sidebarComponentTags": "test, manifest, autodocs",
-        "sidebarEntries": "Docs, Guide",
-      }
-    `);
+        {
+          "autodocsTags": "test, manifest, autodocs",
+          "mdxInManifest": true,
+          "mdxInSidebar": false,
+          "mdxName": "Guide",
+          "mdxTags": "test, manifest, autodocs, attached-mdx",
+          "sidebarComponentTags": "test, manifest, autodocs",
+          "sidebarEntries": "Docs",
+        }
+      `);
   });
 
   it('L: meta removes manifest', async () => {
     expect(await recordAttachedMdx('default-project', 'L-meta-removes-manifest', 'L-guide'))
       .toMatchInlineSnapshot(`
-      {
-        "autodocsTags": "dev, test, autodocs",
-        "mdxInManifest": true,
-        "mdxInSidebar": true,
-        "mdxName": "Guide",
-        "mdxTags": "dev, test, manifest, autodocs, attached-mdx",
-        "sidebarComponentTags": "dev, test, autodocs",
-        "sidebarEntries": "Docs, Story 1, Story 2, Guide",
-      }
-    `);
+        {
+          "autodocsTags": "dev, test, autodocs",
+          "mdxInManifest": false,
+          "mdxInSidebar": true,
+          "mdxName": "Guide",
+          "mdxTags": "dev, test, autodocs, attached-mdx",
+          "sidebarComponentTags": "dev, test, autodocs",
+          "sidebarEntries": "Docs, Story 1, Story 2, Guide",
+        }
+      `);
   });
 });

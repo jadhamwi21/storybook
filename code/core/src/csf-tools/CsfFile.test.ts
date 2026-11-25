@@ -2403,6 +2403,8 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags:
+            - component-tag
           type: story
           subtype: story
           name: A
@@ -2425,6 +2427,8 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags:
+            - component-tag
           type: story
           subtype: story
           name: B
@@ -2465,6 +2469,8 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags:
+            - component-tag
           type: story
           subtype: story
           name: A
@@ -2510,6 +2516,11 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags:
+            - component-tag
+            - component-tag-dup
+            - component-tag-dup
+            - inherit-tag-dup
           type: story
           subtype: story
           name: A
@@ -2570,6 +2581,7 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags: []
           type: story
           subtype: story
           name: A
@@ -2609,6 +2621,7 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags: []
           type: story
           subtype: story
           name: A
@@ -2648,6 +2661,7 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags: []
           type: story
           subtype: story
           name: A
@@ -2687,6 +2701,7 @@ describe('CsfFile', () => {
             storyFn: false
             mount: false
             moduleMock: false
+          metaTags: []
           type: story
           subtype: story
           name: A

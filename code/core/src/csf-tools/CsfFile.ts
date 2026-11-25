@@ -1366,7 +1366,8 @@ export class CsfFile {
 
     Object.entries(this._stories).map(([exportName, story]) => {
       // don't remove any duplicates or negations -- tags will be combined in the index
-      const tags = [...(this._meta?.tags ?? []), ...(story.tags ?? [])];
+      const metaTags = this._meta?.tags ?? [];
+      const tags = [...metaTags, ...(story.tags ?? [])];
       const storyInput = {
         rawComponentPath: this._rawComponentPath,
         exportName,
@@ -1382,6 +1383,7 @@ export class CsfFile {
 
       index.push({
         ...storyInput,
+        metaTags: [...metaTags],
         type: 'story',
         subtype: 'story',
         name: story.name,
@@ -1391,6 +1393,7 @@ export class CsfFile {
         tests.forEach((test) => {
           index.push({
             ...storyInput,
+            metaTags: [...metaTags],
             // TODO implementent proper title => path behavior in `transformStoryIndexToStoriesHash`
             // title: `${storyInput.title}/${story.name}`,
             type: 'story',
